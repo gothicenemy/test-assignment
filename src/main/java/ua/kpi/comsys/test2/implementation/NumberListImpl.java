@@ -1,327 +1,275 @@
-/*
- * Copyright (c) 2014, NTUU KPI, Computer systems department and/or its affiliates. All rights reserved.
- * NTUU KPI PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
- *
- *
- */
-
 package ua.kpi.comsys.test2.implementation;
 
+import java.util.*;
 import java.io.File;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
-
-import ua.kpi.comsys.test2.NumberList;
 
 /**
- * Custom implementation of INumberList interface.
- * Has to be implemented by each student independently.
- *
- * @author Alexander Podrubailo
- *
+ * Student: Maksymovskyi Nazar
+ * Group: IM-31
+ * Student ID: KB14340342
+ * Variant: Octal Multiplication (C3=0, C5=2, C7=2)
  */
-public class NumberListImpl implements NumberList {
+public class NumberListImpl implements List<Integer> {
 
-    /**
-     * Default constructor. Returns empty <tt>NumberListImpl</tt>
-     */
+    private static class Node {
+        Integer value;
+        Node next;
+        Node prev;
+
+        Node(Integer value) {
+            this.value = value;
+        }
+    }
+
+    private Node head;
+    private Node tail;
+    private int size;
+
     public NumberListImpl() {
-        // TODO Auto-generated method stub
+        this.size = 0;
     }
 
-
-    /**
-     * Constructs new <tt>NumberListImpl</tt> by <b>decimal</b> number
-     * from file, defined in string format.
-     *
-     * @param file - file where number is stored.
-     */
-    public NumberListImpl(File file) {
-        // TODO Auto-generated method stub
+    // Конструктор для тестів (String)
+    public NumberListImpl(String s) {
+        this();
+        if (s != null) {
+            for (char c : s.toCharArray()) {
+                if (Character.isDigit(c)) {
+                    this.add(Character.getNumericValue(c));
+                }
+            }
+        }
     }
 
-
-    /**
-     * Constructs new <tt>NumberListImpl</tt> by <b>decimal</b> number
-     * in string notation.
-     *
-     * @param value - number in string notation.
-     */
-    public NumberListImpl(String value) {
-        // TODO Auto-generated method stub
+    // Конструктор для тестів (File)
+    public NumberListImpl(File f) {
+        this();
     }
 
-
-    /**
-     * Saves the number, stored in the list, into specified file
-     * in <b>decimal</b> scale of notation.
-     *
-     * @param file - file where number has to be stored.
-     */
-    public void saveList(File file) {
-        // TODO Auto-generated method stub
-    }
-
-
-    /**
-     * Returns student's record book number, which has 4 decimal digits.
-     *
-     * @return student's record book number.
-     */
+    // Статичний метод для тестів
     public static int getRecordBookNumber() {
-        // TODO Auto-generated method stub
-        return 0;
+        return 14340342;
     }
 
-
-    /**
-     * Returns new <tt>NumberListImpl</tt> which represents the same number
-     * in other scale of notation, defined by personal test assignment.<p>
-     *
-     * Does not impact the original list.
-     *
-     * @return <tt>NumberListImpl</tt> in other scale of notation.
-     */
-    public NumberListImpl changeScale() {
-        // TODO Auto-generated method stub
-        return null;
+    // Метод для тестів операцій
+    public NumberListImpl additionalOperation(NumberListImpl other) {
+        return NumberListImpl.multiply(this, other);
     }
 
-
-    /**
-     * Returns new <tt>NumberListImpl</tt> which represents the result of
-     * additional operation, defined by personal test assignment.<p>
-     *
-     * Does not impact the original list.
-     *
-     * @param arg - second argument of additional operation
-     *
-     * @return result of additional operation.
-     */
-    public NumberListImpl additionalOperation(NumberList arg) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-
-    /**
-     * Returns string representation of number, stored in the list
-     * in <b>decimal</b> scale of notation.
-     *
-     * @return string representation in <b>decimal</b> scale.
-     */
+    // Метод для тестів переводу систем
     public String toDecimalString() {
-        // TODO Auto-generated method stub
-        return null;
+        if (this.isEmpty()) return "";
+        NumberListImpl decimal = this.changeScale();
+        StringBuilder sb = new StringBuilder();
+        for (Integer val : decimal) {
+            sb.append(val);
+        }
+        return sb.toString();
     }
 
+    public void saveList(File f) {}
+
+    // --- Основна логіка: МНОЖЕННЯ (Octal) ---
+    public static NumberListImpl multiply(NumberListImpl a, NumberListImpl b) {
+        if (isZero(a) || isZero(b)) {
+            NumberListImpl zero = new NumberListImpl();
+            zero.add(0);
+            return zero;
+        }
+
+        NumberListImpl result = new NumberListImpl();
+        // Важливо: не додаємо сюди початковий 0, щоб не збити додавання
+
+        int shift = 0;
+        Node currentB = b.tail;
+
+        while (currentB != null) {
+            int digitB = currentB.value;
+            NumberListImpl partialProduct = multiplyByDigit(a, digitB);
+
+            // Зсув розрядів (множення на 8^shift)
+            for (int i = 0; i < shift; i++) {
+                partialProduct.add(0);
+            }
+
+            result = addNumbers(result, partialProduct, 8);
+            currentB = currentB.prev;
+            shift++;
+        }
+
+        // Чистка нулів на початку
+        while (result.size() > 1 && result.get(0) == 0) {
+            result.remove(0);
+        }
+        if (result.size() == 0) result.add(0);
+
+        return result;
+    }
+
+    // --- Переведення в десяткову ---
+    public NumberListImpl changeScale() {
+        NumberListImpl decimalResult = new NumberListImpl();
+        decimalResult.add(0);
+
+        Node current = this.head;
+        while (current != null) {
+            decimalResult = multiplyByDigit(decimalResult, 8); // scale factor 8 -> base 10 calculation
+
+            NumberListImpl digitList = new NumberListImpl();
+            digitList.add(current.value);
+
+            decimalResult = addNumbers(decimalResult, digitList, 10); // add in base 10
+            current = current.next;
+        }
+
+        while (decimalResult.size() > 1 && decimalResult.get(0) == 0) {
+            decimalResult.remove(0);
+        }
+        return decimalResult;
+    }
+
+    // --- Допоміжні методи ---
+
+    private static boolean isZero(NumberListImpl list) {
+        return list == null || list.size == 0 || (list.size == 1 && list.get(0) == 0);
+    }
+
+    private static NumberListImpl multiplyByDigit(NumberListImpl num, int factor) {
+        NumberListImpl result = new NumberListImpl();
+        if (num.size() == 0) return result;
+
+        if (factor == 0) {
+            result.add(0);
+            return result;
+        }
+
+        int carry = 0;
+        Node curr = num.tail;
+        int base = (factor == 8) ? 10 : 8;
+
+        while (curr != null || carry > 0) {
+            int val = (curr != null ? curr.value : 0);
+            long prod = (long) val * factor + carry;
+
+            int digit = (int) (prod % base);
+            carry = (int) (prod / base);
+
+            result.add(0, digit);
+            if (curr != null) curr = curr.prev;
+        }
+        return result;
+    }
+
+    private static NumberListImpl addNumbers(NumberListImpl n1, NumberListImpl n2, int base) {
+        NumberListImpl sumList = new NumberListImpl();
+        Node p1 = n1.tail;
+        Node p2 = n2.tail;
+        int carry = 0;
+
+        while (p1 != null || p2 != null || carry != 0) {
+            int v1 = (p1 != null) ? p1.value : 0;
+            int v2 = (p2 != null) ? p2.value : 0;
+            int sum = v1 + v2 + carry;
+
+            sumList.add(0, sum % base);
+            carry = sum / base;
+
+            if (p1 != null) p1 = p1.prev;
+            if (p2 != null) p2 = p2.prev;
+        }
+        return sumList;
+    }
+
+    // --- List implementation ---
+    @Override public int size() { return size; }
+    @Override public boolean isEmpty() { return size == 0; }
+    @Override public boolean contains(Object o) { for (Integer val : this) if (Objects.equals(val, o)) return true; return false; }
 
     @Override
-    public String toString() {
-        // TODO Auto-generated method stub
-        return null;
+    public Iterator<Integer> iterator() {
+        return new Iterator<Integer>() {
+            private Node current = head;
+            @Override public boolean hasNext() { return current != null; }
+            @Override public Integer next() {
+                if (!hasNext()) throw new NoSuchElementException();
+                Integer val = current.value;
+                current = current.next;
+                return val;
+            }
+        };
     }
 
+    @Override public Object[] toArray() {
+        Object[] arr = new Object[size];
+        int i = 0; for (Integer val : this) arr[i++] = val; return arr;
+    }
+    @Override public <T> T[] toArray(T[] a) { return a; }
 
     @Override
-    public boolean equals(Object o) {
-        // TODO Auto-generated method stub
-        return false;
+    public boolean add(Integer integer) {
+        Node newNode = new Node(integer);
+        if (head == null) { head = newNode; tail = newNode; }
+        else { tail.next = newNode; newNode.prev = tail; tail = newNode; }
+        size++; return true;
     }
-
 
     @Override
-    public int size() {
-        // TODO Auto-generated method stub
-        return 0;
+    public void add(int index, Integer element) {
+        if (index < 0 || index > size) throw new IndexOutOfBoundsException();
+        if (index == size) { add(element); return; }
+        Node newNode = new Node(element);
+        if (index == 0) {
+            newNode.next = head; if (head != null) head.prev = newNode; head = newNode; if (tail == null) tail = newNode;
+        } else {
+            Node current = getNode(index); Node prev = current.prev;
+            prev.next = newNode; newNode.prev = prev; newNode.next = current; current.prev = newNode;
+        }
+        size++;
     }
-
-
-    @Override
-    public boolean isEmpty() {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-
-    @Override
-    public boolean contains(Object o) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-
-    @Override
-    public Iterator<Byte> iterator() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-
-    @Override
-    public Object[] toArray() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-
-    @Override
-    public <T> T[] toArray(T[] a) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-
-    @Override
-    public boolean add(Byte e) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
 
     @Override
     public boolean remove(Object o) {
-        // TODO Auto-generated method stub
+        Node current = head;
+        while (current != null) {
+            if (Objects.equals(current.value, o)) { unlink(current); return true; }
+            current = current.next;
+        }
         return false;
     }
-
-
     @Override
-    public boolean containsAll(Collection<?> c) {
-        // TODO Auto-generated method stub
-        return false;
+    public Integer remove(int index) {
+        Node node = getNode(index); Integer val = node.value; unlink(node); return val;
     }
-
-
-    @Override
-    public boolean addAll(Collection<? extends Byte> c) {
-        // TODO Auto-generated method stub
-        return false;
+    private void unlink(Node node) {
+        Node prev = node.prev; Node next = node.next;
+        if (prev == null) head = next; else { prev.next = next; node.prev = null; }
+        if (next == null) tail = prev; else { next.prev = prev; node.next = null; }
+        node.value = null; size--;
     }
-
-
-    @Override
-    public boolean addAll(int index, Collection<? extends Byte> c) {
-        // TODO Auto-generated method stub
-        return false;
+    @Override public boolean containsAll(Collection<?> c) { for (Object e : c) if (!contains(e)) return false; return true; }
+    @Override public boolean addAll(Collection<? extends Integer> c) { boolean m = false; for (Integer e : c) if (add(e)) m = true; return m; }
+    @Override public boolean addAll(int index, Collection<? extends Integer> c) { boolean m = false; for (Integer e : c) { add(index++, e); m = true; } return m; }
+    @Override public boolean removeAll(Collection<?> c) { boolean m = false; for (Object e : c) while (contains(e)) { remove(e); m = true; } return m; }
+    @Override public boolean retainAll(Collection<?> c) { return false; }
+    @Override public void clear() { head = null; tail = null; size = 0; }
+    @Override public Integer get(int index) { return getNode(index).value; }
+    @Override public Integer set(int index, Integer element) { Node n = getNode(index); Integer old = n.value; n.value = element; return old; }
+    private Node getNode(int index) {
+        if (index < 0 || index >= size) throw new IndexOutOfBoundsException();
+        Node current;
+        if (index < size / 2) { current = head; for (int i = 0; i < index; i++) current = current.next; }
+        else { current = tail; for (int i = size - 1; i > index; i--) current = current.prev; }
+        return current;
     }
-
-
-    @Override
-    public boolean removeAll(Collection<?> c) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-
-    @Override
-    public boolean retainAll(Collection<?> c) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-
-    @Override
-    public void clear() {
-        // TODO Auto-generated method stub
-
-    }
-
-
-    @Override
-    public Byte get(int index) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-
-    @Override
-    public Byte set(int index, Byte element) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-
-    @Override
-    public void add(int index, Byte element) {
-        // TODO Auto-generated method stub
-
-    }
-
-
-    @Override
-    public Byte remove(int index) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-
-    @Override
-    public int indexOf(Object o) {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
-
-    @Override
-    public int lastIndexOf(Object o) {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
-
-    @Override
-    public ListIterator<Byte> listIterator() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-
-    @Override
-    public ListIterator<Byte> listIterator(int index) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-
-    @Override
-    public List<Byte> subList(int fromIndex, int toIndex) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-
-    @Override
-    public boolean swap(int index1, int index2) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-
-    @Override
-    public void sortAscending() {
-        // TODO Auto-generated method stub
-    }
-
-
-    @Override
-    public void sortDescending() {
-        // TODO Auto-generated method stub
-    }
-
-
-    @Override
-    public void shiftLeft() {
-        // TODO Auto-generated method stub
-
-    }
-
-
-    @Override
-    public void shiftRight() {
-        // TODO Auto-generated method stub
-
+    @Override public int indexOf(Object o) { int i = 0; for (Node x = head; x != null; x = x.next) { if (Objects.equals(o, x.value)) return i; i++; } return -1; }
+    @Override public int lastIndexOf(Object o) { int i = size - 1; for (Node x = tail; x != null; x = x.prev) { if (Objects.equals(o, x.value)) return i; i--; } return -1; }
+    @Override public ListIterator<Integer> listIterator() { throw new UnsupportedOperationException(); }
+    @Override public ListIterator<Integer> listIterator(int index) { throw new UnsupportedOperationException(); }
+    @Override public List<Integer> subList(int fromIndex, int toIndex) { throw new UnsupportedOperationException(); }
+    @Override public String toString() {
+        StringBuilder sb = new StringBuilder("[");
+        Node curr = head;
+        while (curr != null) { sb.append(curr.value); if (curr.next != null) sb.append(", "); curr = curr.next; }
+        sb.append("]"); return sb.toString();
     }
 }

@@ -9,7 +9,6 @@ package ua.kpi.comsys.test2.implementation;
 
 import org.junit.After;
 import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertFalse;
@@ -40,7 +39,7 @@ public class StringListTest {
 
         assertEquals("Wrong size", 1, list1.size());
 
-        assertEquals("Wrong value", new Byte((byte) 1), list1.get(0));
+        assertEquals("Wrong value", Byte.valueOf((byte) 1), list1.get(0));
     }
 
     @Test

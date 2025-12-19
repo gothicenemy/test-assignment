@@ -13,7 +13,6 @@ import org.junit.Test;
 import static org.junit.Assume.assumeTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-
 public class AdditionalOperationTest {
 
     NumberListImpl list1;

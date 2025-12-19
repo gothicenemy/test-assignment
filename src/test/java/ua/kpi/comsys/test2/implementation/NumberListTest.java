@@ -16,7 +16,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-
 public abstract class NumberListTest {
     NumberListImpl list;
 
@@ -45,7 +44,7 @@ public abstract class NumberListTest {
     @Test
     public void testSingleDigit() {
         list = new NumberListImpl();
-        list.add(new Byte((byte) 1));
+        list.add(1);
         assertEquals(1, list.size());
         assertFalse(list.isEmpty());
 
